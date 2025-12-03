@@ -6,12 +6,12 @@
   <title>Your Love</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    body{background:radial-gradient(ellipse at center,#07020a 0%, #000 60%);margin:0}
+    body{margin:0;height:100vh;background:radial-gradient(ellipse at center,#07020a 0%, #000 60%);color:#fff;font-family:Inter,Arial}
     .scene{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;perspective:1000px;overflow:hidden}
     .heart-wrap{width:500px;height:500px;position:relative;transform-style:preserve-3d;transform:rotateX(15deg) rotateY(0deg);animation:slowspin 12s linear infinite}
     @keyframes slowspin{0%{transform:rotateX(10deg) rotateY(0deg)}50%{transform:rotateX(10deg) rotateY(180deg)}100%{transform:rotateX(10deg) rotateY(360deg)}}
     .node{position:absolute;left:50%;top:50%;transform-origin:center;font-weight:700;font-size:18px;letter-spacing:2px;white-space:nowrap;filter:drop-shadow(0 0 8px rgba(234,128,176,0.6));color:#ffb0d9;text-shadow:0 0 6px rgba(255,255,255,0.9);opacity:0.95}
-    .subtitle{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:#ddd;font-size:14px;opacity:0.9;backdrop-filter: blur(6px);padding:6px 10px;border-radius:8px}
+    .subtitle{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:#ddd;font-size:14px;opacity:0.9;background:transparent;padding:6px 10px;border-radius:8px}
   </style>
 </head>
 <body>
@@ -21,160 +21,73 @@
   <div class="subtitle">ส่งให้คนพิเศษของคุณ ❤️</div>
 
   <script>
-    // อ่านข้อความจาก URL ?msg=
-    function getParam(name){
+    // อ่านข้อความจาก query param ?msg=
+    function getParam(name) {
       try {
-        const u = new URL(location.href);
-        return u.searchParams.get(name) || "I%20love%20you%20%E2%9D%A4%EF%B8%8F";
-      } catch(e){
-        return "I%20love%20you%20%E2%9D%A4%EF%B8%8F";
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name) || "I love you ❤️";
+      } catch (e) {
+        return "I love you ❤️";
       }
     }
-    const message = decodeURIComponent(getParam('msg'));
+    var message = getParam('msg');
 
-    const container = document.getElementById('heart');
+    var container = document.getElementById('heart');
 
-    // สมการหัวใจ (parametric)
-    const points = [];
-    const N = 120;
-    for(let i=0;i<N;i++){
-      const t = (i / N) * Math.PI * 2;
-      const x = 16 * Math.pow(Math.sin(t),3);
-      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-      points.push({x,y,t});
+    // สร้างจุดบนสมการหัวใจ
+    var points = [];
+    var N = 120;
+    for (var i = 0; i < N; i++) {
+      var t = (i / N) * Math.PI * 2;
+      var x = 16 * Math.pow(Math.sin(t), 3);
+      var y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+      points.push({x: x, y: y});
     }
 
-    // สร้าง node ด้วยข้อความที่อ่านมา (message) — ใช้ textContent ปลอดภัยกว่า innerHTML
-    const scale = 14;
-    const offsetX = 0;
-    const offsetY = -30;
-    for(let i=0;i<points.length;i++){
-      const p = points[i];
-      const el = document.createElement('span');
+    var scale = 14;
+    var offsetY = -30;
+
+    for (var i = 0; i < points.length; i++) {
+      var p = points[i];
+      var el = document.createElement('span');
       el.className = 'node';
-      // ใส่ข้อความแบบปลอดภัย
-      el.textContent = message;
-      const px = p.x * scale + offsetX;
-      const py = p.y * scale + offsetY;
-      el.style.left = `calc(50% + ${px}px)`;
-      el.style.top = `calc(50% - ${py}px)`;
-      // หมุนให้เข้าทิศทางเส้น (approx)
-      const prev = points[(i-1+points.length)%points.length];
-      const next = points[(i+1)%points.length];
-      const angleDeg = Math.atan2(next.y - prev.y, next.x - prev.x) * 180 / Math.PI;
-      el.style.transform = `translate(-50%,-50%) rotate(${angleDeg}deg) translateZ(${(i%8)-4}px) scale(${1 - (i%6)*0.02})`;
-      el.style.zIndex = `${1000 - Math.abs(i - points.length/2)}`;
-      el.style.animation = `puls 2.6s ease-in-out ${ (i%10)/20 }s infinite`;
+      // แสดงข้อความ (ถ้ามายาว อาจจะตัดสั้น)
+      var text = message;
+      if (text.length > 28) text = text.substring(0, 28) + '...';
+      el.textContent = text;
+
+      var px = p.x * scale;
+      var py = p.y * scale + offsetY;
+      el.style.left = 'calc(50% + ' + px + 'px)';
+      el.style.top = 'calc(50% - ' + py + 'px)';
+
+      // คำนวณมุมประมาณโดยอนุมานความต่างของจุดข้างเคียง
+      var prev = points[(i - 1 + points.length) % points.length];
+      var next = points[(i + 1) % points.length];
+      var dx = next.x - prev.x;
+      var dy = next.y - prev.y;
+      var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      el.style.transform = 'translate(-50%,-50%) rotate(' + ang + 'deg) translateZ(' + ((i % 8) - 4) + 'px) scale(' + (1 - (i % 6) * 0.02) + ')';
+
+      el.style.zIndex = String(1000 - Math.abs(i - points.length/2));
+      el.style.animation = 'puls 2.6s ease-in-out ' + ((i % 10) / 20) + 's infinite';
       container.appendChild(el);
     }
 
-    // สไตล์ keyframes โดยใช้ textContent เพื่อลดปัญหา syntax
-    const styleTag = document.createElement('style');
-    styleTag.type = 'text/css';
-    styleTag.textContent = '@keyframes puls{0%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}50%{transform:translate(-50%,-50%) rotate(0deg) translateZ(8px) scale(1.04);opacity:1}100%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}}';
-    document.head.appendChild(styleTag);
+    // เพิ่ม keyframes ไดนามิก
+    var st = document.createElement('style');
+    st.innerHTML = '@keyframes puls{0%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}50%{transform:translate(-50%,-50%) rotate(0deg) translateZ(8px) scale(1.04);opacity:1}100%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}}';
+    document.head.appendChild(st);
 
-    // การโต้ตอบเมาส์ให้เอียง
-    document.addEventListener('mousemove', (e)=>{
-      const cx = window.innerWidth/2;
-      const cy = window.innerHeight/2;
-      const dx = (e.clientX - cx)/cx;
-      const dy = (e.clientY - cy)/cy;
-      container.style.transform = `rotateX(${10 + dy*15}deg) rotateY(${dx*20}deg)`;
-    });
-  </script>
-</body>
-</html>
-<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Your Love</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body{background:radial-gradient(ellipse at center,#07020a 0%, #000 60%);margin:0}
-    .scene{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;perspective:1000px;overflow:hidden}
-    .heart-wrap{width:500px;height:500px;position:relative;transform-style:preserve-3d;transform:rotateX(15deg) rotateY(0deg);animation:slowspin 12s linear infinite}
-    @keyframes slowspin{0%{transform:rotateX(10deg) rotateY(0deg)}50%{transform:rotateX(10deg) rotateY(180deg)}100%{transform:rotateX(10deg) rotateY(360deg)}}
-    .node{position:absolute;left:50%;top:50%;transform-origin:center;font-weight:700;font-size:18px;letter-spacing:2px;white-space:nowrap;filter:drop-shadow(0 0 8px rgba(234,128,176,0.6));color:#ffb0d9;text-shadow:0 0 6px rgba(255,255,255,0.9);opacity:0.95}
-    .subtitle{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:#ddd;font-size:14px;opacity:0.9;backdrop-filter: blur(6px);padding:6px 10px;border-radius:8px}
-  </style>
-</head>
-<body>
-  <div class="scene">
-    <div id="heart" class="heart-wrap" aria-hidden="true"></div>
-  </div>
-  <div class="subtitle">ส่งให้คนพิเศษของคุณ ❤️</div>
-
-  <script>
-    // อ่านข้อความจาก URL ?msg=
-    function getParam(name){
-      try {
-        const u = new URL(location.href);
-        return u.searchParams.get(name) || "I%20love%20you%20%E2%9D%A4%EF%B8%8F";
-      } catch(e){
-        return "I%20love%20you%20%E2%9D%A4%EF%B8%8F";
-      }
-    }
-    const message = decodeURIComponent(getParam('msg'));
-
-    const container = document.getElementById('heart');
-
-    // สมการหัวใจ (parametric)
-    const points = [];
-    const N = 120;
-    for(let i=0;i<N;i++){
-      const t = (i / N) * Math.PI * 2;
-      const x = 16 * Math.pow(Math.sin(t),3);
-      const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-      points.push({x,y,t});
-    }
-
-    // สร้าง node ด้วยข้อความที่อ่านมา (message) — ใช้ textContent ปลอดภัยกว่า innerHTML
-    const scale = 14;
-    const offsetX = 0;
-    const offsetY = -30;
-    for(let i=0;i<points.length;i++){
-      const p = points[i];
-      const el = document.createElement('span');
-      el.className = 'node';
-      // ใส่ข้อความแบบปลอดภัย
-      el.textContent = message;
-      const px = p.x * scale + offsetX;
-      const py = p.y * scale + offsetY;
-      el.style.left = `calc(50% + ${px}px)`;
-      el.style.top = `calc(50% - ${py}px)`;
-      // หมุนให้เข้าทิศทางเส้น (approx)
-      const prev = points[(i-1+points.length)%points.length];
-      const next = points[(i+1)%points.length];
-      const angleDeg = Math.atan2(next.y - prev.y, next.x - prev.x) * 180 / Math.PI;
-      el.style.transform = `translate(-50%,-50%) rotate(${angleDeg}deg) translateZ(${(i%8)-4}px) scale(${1 - (i%6)*0.02})`;
-      el.style.zIndex = `${1000 - Math.abs(i - points.length/2)}`;
-      el.style.animation = `puls 2.6s ease-in-out ${ (i%10)/20 }s infinite`;
-      container.appendChild(el);
-    }
-
-    // สไตล์ keyframes โดยใช้ textContent เพื่อลดปัญหา syntax
-    const styleTag = document.createElement('style');
-    styleTag.type = 'text/css';
-    styleTag.textContent = '@keyframes puls{0%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}50%{transform:translate(-50%,-50%) rotate(0deg) translateZ(8px) scale(1.04);opacity:1}100%{transform:translate(-50%,-50%) rotate(0deg) translateZ(0px) scale(0.98);opacity:0.9}}';
-    document.head.appendChild(styleTag);
-
-    // การโต้ตอบเมาส์ให้เอียง
-    document.addEventListener('mousemove', (e)=>{
-      const cx = window.innerWidth/2;
-      const cy = window.innerHeight/2;
-      const dx = (e.clientX - cx)/cx;
-      const dy = (e.clientY - cy)/cy;
-      container.style.transform = `rotateX(${10 + dy*15}deg) rotateY(${dx*20}deg)`;
+    // mouse tilt
+    document.addEventListener('mousemove', function(e) {
+      var cx = window.innerWidth / 2;
+      var cy = window.innerHeight / 2;
+      var dx = (e.clientX - cx) / cx;
+      var dy = (e.clientY - cy) / cy;
+      container.style.transform = 'rotateX(' + (10 + dy*15) + 'deg) rotateY(' + (dx*20) + 'deg)';
     });
   </script>
 </body>
 </html>
 
-
-  </script>
-</body>
-
-</html>
