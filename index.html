@@ -6,7 +6,7 @@
   <title>Secret Love — เข้าสู่ระบบ</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    body{background:#070707;color:#fff;font-family:Inter, Arial;margin:0;height:100vh;display:flex;align-items:center;justify-content:center}
+    body{background:#070707;color:#fff;font-family:Inter, Arial, sans-serif;margin:0;height:100vh;display:flex;align-items:center;justify-content:center}
     .center{text-align:center;padding:20px}
     input[type="password"]{padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#fff;width:260px}
     button{margin-top:12px;padding:10px 14px;border-radius:8px;border:0;background:#ea80b0;color:#111;cursor:pointer}
@@ -23,21 +23,32 @@
 
   <script>
     (function(){
-      const btn = document.getElementById('go');
-      const pwdInput = document.getElementById('pwd');
-      const ENCODED_PASSWORD = "bG92ZTEyMw=="; // base64 ของ "love123"
-      function base64Decode(s){ try { return atob(s); } catch(e){ return ""; } }
-      btn.addEventListener('click', ()=>{
-        const val = (pwdInput.value || "").trim();
-        if(val === base64Decode(ENCODED_PASSWORD)){
-          const message = encodeURIComponent("I love you ❤️");
-          window.location.href = love.html?msg=${message};
+      // base64 ของ 'love123'
+      const ENCODED_PASSWORD = "bG92ZTEyMw==";
+      function base64Decode(s){
+        try { return atob(s); }
+        catch(e){ return ""; }
+      }
+
+      var btn = document.getElementById('go');
+      var pwdInput = document.getElementById('pwd');
+
+      btn.addEventListener('click', function(){
+        var v = (pwdInput.value || "").trim();
+        if (v === base64Decode(ENCODED_PASSWORD)) {
+          // ส่งข้อความไปเป็น query param ปลอดภัยด้วย encodeURIComponent
+          var message = encodeURIComponent("I love you ❤️");
+          window.location.href = "love.html?msg=" + message;
         } else {
-          alert('รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง 😘');
-          pwdInput.value = ""; pwdInput.focus();
+          alert("รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง 😘");
+          pwdInput.value = "";
+          pwdInput.focus();
         }
       });
-      pwdInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') btn.click(); });
+
+      pwdInput.addEventListener('keydown', function(e){
+        if (e.key === 'Enter') btn.click();
+      });
     })();
   </script>
 </body>
